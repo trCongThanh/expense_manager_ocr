@@ -1,53 +1,75 @@
-# Quản Lý Chi Tiêu OCR Hóa Đơn
+<div align="center">
+  <h1>💸 Quản Lý Chi Tiêu OCR Hóa Đơn</h1>
+  <p><i>Ứng dụng quản lý tài chính cá nhân thông minh tích hợp công nghệ AI (Google ML Kit) để tự động đọc và trích xuất dữ liệu từ hóa đơn.</i></p>
+  
+  <p>
+    <a href="https://flutter.dev"><img src="https://img.shields.io/badge/Flutter-%2302569B.svg?style=for-the-badge&logo=Flutter&logoColor=white" alt="Flutter"></a>
+    <a href="https://dart.dev"><img src="https://img.shields.io/badge/dart-%230175C2.svg?style=for-the-badge&logo=dart&logoColor=white" alt="Dart"></a>
+    <a href="https://firebase.google.com/docs/ml-kit"><img src="https://img.shields.io/badge/Google%20ML%20Kit-FFCA28?style=for-the-badge&logo=google&logoColor=black" alt="Google ML Kit"></a>
+  </p>
+</div>
 
-🚀 **[Trải nghiệm bản Web trực tiếp tại đây (Live Demo)](https://trCongThanh.github.io/expense_manager_ocr/)**
-*(Lưu ý: Tính năng Camera OCR chỉ hoạt động trên thiết bị di động thật)*
+---
 
-📦 **[Tải file APK Android (Bản cài đặt)](https://github.com/trCongThanh/expense_manager_ocr/releases/latest)**
+## 🚀 Trải Nghiệm Ứng Dụng (Live Demo & Download)
 
-Dự án Flutter quản lý chi tiêu kết hợp công nghệ OCR (nhận diện ký tự quang học) để trích xuất thông tin tự động từ hình ảnh hóa đơn.
+Bạn có thể trải nghiệm ngay giao diện Dashboard siêu mượt (Dark Mode, Glassmorphism, Material 3) trực tiếp trên trình duyệt Web:
 
-## Các Thư Viện Đã Tích Hợp
+🌍 **[Live Demo (Netlify) - Khuyên Dùng](https://trcongthanh-expense-manager-ocr.netlify.app/)**  
+🌐 **[Live Demo (GitHub Pages)](https://trCongThanh.github.io/expense_manager_ocr/)**
 
-### 1. OCR & Quét ảnh
-* **[google_mlkit_text_recognition](https://pub.dev/packages/google_mlkit_text_recognition):** Nhận diện và trích xuất văn bản từ hình ảnh hóa đơn.
-* **[image_picker](https://pub.dev/packages/image_picker):** Chụp ảnh từ camera hoặc chọn ảnh từ thư viện.
-* **[image_cropper](https://pub.dev/packages/image_cropper):** Cắt ảnh hóa đơn để loại bỏ các chi tiết thừa, giúp tăng độ chính xác của OCR.
+*(Lưu ý: Do hạn chế của trình duyệt, tính năng **Quét Camera OCR** không hoạt động trên nền Web. Vui lòng cài đặt file APK bên dưới để trải nghiệm toàn bộ tính năng)*
 
-### 2. Giao diện & Biểu đồ
-* **[fl_chart](https://pub.dev/packages/fl_chart):** Vẽ biểu đồ trực quan (biểu đồ tròn, biểu đồ cột) để hiển thị thống kê thu chi.
-* **[lucide_icons](https://pub.dev/packages/lucide_icons):** Bộ icon hiện đại, đẹp mắt cho các danh mục chi tiêu.
+📱 **[Tải file cài đặt APK (Android)](https://github.com/trCongThanh/expense_manager_ocr/releases/latest)**
 
-### 3. Hiệu ứng chuyển động
-* **[lottie](https://pub.dev/packages/lottie):** Hiển thị các hiệu ứng animation phức tạp (ví dụ: hiệu ứng quét sóng OCR đang xử lý).
-* **[animations](https://pub.dev/packages/animations):** Các hiệu ứng chuyển trang mượt mà (như SharedAxisTransition, FadeThroughTransition).
+---
 
-### 4. Tính toán & Định dạng
-* **[intl](https://pub.dev/packages/intl):** Định dạng tiền tệ (VND) và ngày tháng (dd/MM/yyyy).
+## ✨ Tính Năng Nổi Bật
 
-### 5. Lưu trữ & State
-* **[hive](https://pub.dev/packages/hive) & [hive_flutter](https://pub.dev/packages/hive_flutter):** Cơ sở dữ liệu NoSQL cục bộ, siêu nhanh, dùng để lưu trữ các giao dịch chi tiêu offline.
-* **[flutter_riverpod](https://pub.dev/packages/flutter_riverpod):** Quản lý state (trạng thái) của ứng dụng một cách an toàn và dễ dàng bảo trì.
+### 🧠 1. OCR Thông Minh (Cốt Lõi)
+- **Quét Hóa Đơn Tự Động:** Nhận diện và bóc tách dữ liệu từ hóa đơn vật lý bằng lõi AI của Google ML Kit cực nhanh.
+- **Side-by-Side Review:** Giao diện vuốt (Sliding Up Panel) cho phép kiểm tra song song ảnh hóa đơn gốc và kết quả trích xuất.
 
-### 6. Trải nghiệm người dùng (UI/UX)
-* **[shimmer](https://pub.dev/packages/shimmer):** Tạo hiệu ứng lấp lánh (bóng ma) khi chờ dữ liệu hoặc đang chờ ML Kit phân tích.
-* **[skeletonizer](https://pub.dev/packages/skeletonizer):** Giải pháp tự động bọc UI thật thành giao diện skeleton loading tuyệt đẹp.
-* **[sliding_up_panel](https://pub.dev/packages/sliding_up_panel):** Bảng vuốt từ dưới lên (Bottom Sheet) hoàn hảo cho việc hiển thị ảnh hóa đơn ở trên và dữ liệu nhận diện ở dưới.
+### 💳 2. Quản Lý Tài Chính (Gây Nghiện)
+- **Thống kê Trực Quan:** Biểu đồ đường (Line Chart) theo dõi dòng tiền mượt mà.
+- **Chế Độ Riêng Tư (Privacy Mode):** Làm mờ toàn bộ số tiền chỉ với một nút bấm (hiệu ứng kính mờ Blur) giúp bảo vệ thông tin khi dùng app ở nơi công cộng.
+- **Dark Mode & Material 3:** Giao diện tối sang trọng, tôn lên các con số tài chính với điểm nhấn xanh Neon (Thu) và Đỏ Coral (Chi).
 
-### 7. Bảo mật & Tiện ích
-* **[local_auth](https://pub.dev/packages/local_auth):** Khóa/mở khóa ứng dụng bằng sinh trắc học (vân tay, khuôn mặt) như các ứng dụng ngân hàng.
-* **[uuid](https://pub.dev/packages/uuid):** Tạo ID định danh duy nhất cho từng giao dịch hoặc hóa đơn.
+---
 
-## Các Bước Tiếp Theo
-1. **Khởi tạo Code Generation (nếu dùng Hive Adapter):**
+## 📦 Kiến Trúc & Công Nghệ Sử Dụng
+
+Ứng dụng được xây dựng trên nền tảng kiến trúc **Feature-First** tiên tiến, sử dụng các thư viện hàng đầu:
+
+| Nhóm Công Nghệ | Thư Viện Sử Dụng | Vai Trò |
+| :--- | :--- | :--- |
+| **Quét & AI** | `google_mlkit_text_recognition`, `image_picker` | Trích xuất ký tự (OCR) từ Camera / Thư viện. |
+| **Giao Diện (UI)** | `fl_chart`, `lucide_icons_flutter` | Vẽ biểu đồ tài chính và cung cấp bộ icon Minimalist. |
+| **UX & Chuyển Động**| `flutter_animate`, `skeletonizer`, `sliding_up_panel` | Tạo hiệu ứng bóng ma loading, slide mượt mà, fade-in. |
+| **Kiến Trúc & State**| `flutter_riverpod`, `hive` | Quản lý luồng dữ liệu (State) và cơ sở dữ liệu NoSQL cục bộ. |
+
+---
+
+## 🛠 Hướng Dẫn Chạy Cục Bộ (Local Development)
+
+Nếu bạn muốn clone dự án này về máy và phát triển tiếp:
+
+1. **Clone repository:**
    ```bash
-   flutter pub run build_runner build
+   git clone https://github.com/trCongThanh/expense_manager_ocr.git
+   cd expense_manager_ocr
    ```
-2. **Cài đặt CocoaPods (nếu build iOS):**
+
+2. **Cài đặt các thư viện phụ thuộc:**
    ```bash
-   cd ios && pod install
+   flutter pub get
    ```
-3. **Chạy ứng dụng:**
+
+3. **Chạy ứng dụng (trên máy ảo Android/iOS để test OCR):**
    ```bash
    flutter run
    ```
+
+<div align="center">
+  <p>Được thiết kế và phát triển bởi <b>trCongThanh</b> ❤️</p>
+</div>
