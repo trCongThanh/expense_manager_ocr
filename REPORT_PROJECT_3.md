@@ -10,8 +10,11 @@
 ## 1. GENERAL INFORMATION & DELIVERABLE LINKS
 * **Team Members:**
   1. Trương Công Thành – Student ID: [23IT251] – Role: Mobile App Developer / System Architect – Contribution: 100%
-* **🔗 Live Demo URL:** [https://trcongthanh-expense-manager-ocr.netlify.app/](https://trcongthanh-expense-manager-ocr.netlify.app/)
+* **🔗 Live Demo URL (Netlify):** [https://trcongthanh-expense-manager-ocr.netlify.app/](https://trcongthanh-expense-manager-ocr.netlify.app/)
+* **🔗 Live Demo URL (GitHub Pages):** [Quản Lý Chi Tiêu OCR](https://trcongthanh.github.io/expense_manager_ocr/)
+* **📱 App APK Download:** [Release v1.0.20 · trCongThanh/expense_manager_ocr](https://github.com/trCongThanh/expense_manager_ocr/releases/tag/v1.0.20)
 * **📂 GitHub Repository:** [https://github.com/trCongThanh/expense_manager_ocr](https://github.com/trCongThanh/expense_manager_ocr)
+* **🎥 Video Demo:** [Google Drive Video](https://drive.google.com/file/d/1fgdavtXxjGgYxtHgmyQbPLuYvB01vmhI/view)
 
 ---
 
@@ -43,16 +46,19 @@
 
 *(Hình ảnh minh họa chức năng Quét OCR và Đồng bộ Dữ liệu)*
 
-* **Screenshot 1: Dynamic Dashboard**
-  - Hiển thị Tổng số dư thay đổi động theo từng giao dịch thu/chi được lưu trữ trong Hive DB.
-  
-* **Screenshot 2: Interactive Analytics & Theming**
-  - Giao diện Biểu đồ (`fl_chart`) và Chế độ ban đêm (Dark Mode) kết hợp Typography do người dùng tùy chỉnh.
+<div align="center">
+  <img src="https://i.ibb.co/TMB3qkcz/image-demo-1.png" alt="image demo 1" border="0" width="30%">
+  <img src="https://i.ibb.co/ymgwddrZ/image-demo-2-png.png" alt="image demo 2 png" border="0" width="30%">
+  <img src="https://i.ibb.co/kLqJkLG/image-demo-3-png.png" alt="image demo 3 png" border="0" width="30%">
+</div>
+<br>
+<div align="center">
+  <img src="https://i.ibb.co/vvmwczJQ/image-demo-4-png.png" alt="image demo 4 png" border="0" width="30%">
+  <img src="https://i.ibb.co/fYCqWR1B/image-demo-5-png.png" alt="image demo 5 png" border="0" width="30%">
+  <img src="https://i.ibb.co/Z06k0N2/image-demo-6-png.png" alt="image demo 6 png" border="0" width="30%">
+</div>
 
-* **Screenshot 3: ML Kit Offline Scanner & Heuristics**
-  - Nhận diện thành công văn bản trong ảnh, tìm ra tên cửa hàng và lọc ra giá trị số tiền hóa đơn lớn nhất hoàn toàn Offline không cần WiFi.
-
-*(Ghi chú: Thay thế bằng hình thực tế nếu có)*
+*(Giao diện Dynamic Dashboard, Interactive Analytics, Cài đặt Hệ thống và Tính năng Quét Hóa Đơn bằng Google ML Kit Offline)*
 
 ---
 

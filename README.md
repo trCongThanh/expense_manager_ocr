@@ -15,16 +15,26 @@
 
 Bạn có thể trải nghiệm ngay giao diện Dashboard siêu mượt (Dark Mode, Glassmorphism, Material 3) trực tiếp trên trình duyệt Web:
 
-📱 **[Tải file cài đặt APK (Android) - Khuyên Dùng](https://github.com/trCongThanh/expense_manager_ocr/releases/latest)**
+📱 **[Tải file cài đặt APK (Android) - v1.0.20](https://github.com/trCongThanh/expense_manager_ocr/releases/tag/v1.0.20)**
 
 *(Lưu ý: Do hạn chế của trình duyệt, tính năng **Quét Camera OCR** không hoạt động trên nền Web. Vui lòng cài đặt file APK bên dưới để trải nghiệm toàn bộ tính năng)*
 
 🌍 **[Live Demo (Netlify)](https://trcongthanh-expense-manager-ocr.netlify.app/)**  
-🌐 **[Live Demo (GitHub Pages)](https://trCongThanh.github.io/expense_manager_ocr/)**
+🌐 **[Live Demo (GitHub Pages)](https://trcongthanh.github.io/expense_manager_ocr/)**
 
+🎥 **[Video Demo (Google Drive)](https://drive.google.com/file/d/1fgdavtXxjGgYxtHgmyQbPLuYvB01vmhI/view)**
 
-
-
+<div align="center">
+  <img src="https://i.ibb.co/TMB3qkcz/image-demo-1.png" alt="image demo 1" border="0" width="30%">
+  <img src="https://i.ibb.co/ymgwddrZ/image-demo-2-png.png" alt="image demo 2 png" border="0" width="30%">
+  <img src="https://i.ibb.co/kLqJkLG/image-demo-3-png.png" alt="image demo 3 png" border="0" width="30%">
+</div>
+<br>
+<div align="center">
+  <img src="https://i.ibb.co/vvmwczJQ/image-demo-4-png.png" alt="image demo 4 png" border="0" width="30%">
+  <img src="https://i.ibb.co/fYCqWR1B/image-demo-5-png.png" alt="image demo 5 png" border="0" width="30%">
+  <img src="https://i.ibb.co/Z06k0N2/image-demo-6-png.png" alt="image demo 6 png" border="0" width="30%">
+</div>
 ---
 
 ## ✨ Tính Năng Nổi Bật
