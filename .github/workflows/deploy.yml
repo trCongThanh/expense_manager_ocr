@@ -38,10 +38,13 @@ jobs:
       - name: Build Android APK
         run: flutter build apk --release
 
+      - name: Rename APK
+        run: mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/expense-manager-ocr.apk
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: build/app/outputs/flutter-apk/app-release.apk
+          files: build/app/outputs/flutter-apk/expense-manager-ocr.apk
           tag_name: "v1.0.${{ github.run_number }}"
           name: "Release v1.0.${{ github.run_number }}"
         env:
