@@ -1,10 +1,8 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
@@ -22,15 +20,13 @@ class _OcrScannerScreenState extends ConsumerState<OcrScannerScreen> {
   bool _isProcessing = false;
   File? _imageFile;
   
-  // Kết quả của 2 AI
-  List<Map<String, String>> _mlKitItems = [];
-  List<Map<String, String>> _geminiItems = [];
+  // Dữ liệu trích xuất thủ công
+  String _storeName = 'Không xác định';
+  String _totalPrice = '0 đ';
+  List<String> _rawLines = [];
 
   final ImagePicker _picker = ImagePicker();
   final TextRecognizer _textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
-  
-  // API Key Gemini (Dùng mảng để chặn trình biên dịch)
-  String _geminiApiKey = ['AQ.Ab8RN6JXXJ9H', 't1u7mYkKxXqfTVp4V6Zi224Olq5Mz0pjckbxKA.'].join('');
 
   @override
   void dispose() {
@@ -45,11 +41,12 @@ class _OcrScannerScreenState extends ConsumerState<OcrScannerScreen> {
         setState(() {
           _imageFile = File(pickedFile.path);
           _isProcessing = true;
-          _mlKitItems = [];
-          _geminiItems = [];
+          _rawLines = [];
+          _storeName = 'Không xác định';
+          _totalPrice = '0 đ';
         });
         
-        await _processImageAllEngines();
+        await _processImageMLKit();
       }
     } catch (e) {
       debugPrint("Lỗi chọn ảnh: $e");
@@ -57,132 +54,91 @@ class _OcrScannerScreenState extends ConsumerState<OcrScannerScreen> {
     }
   }
 
-  Future<void> _processImageAllEngines() async {
+  Future<void> _processImageMLKit() async {
     if (_imageFile == null) return;
-    final imageBytes = await _imageFile!.readAsBytes();
 
-    // Chạy song song 2 AI cùng lúc
-    await Future.wait([
-      _runMLKit(),
-      _runGemini(imageBytes),
-    ]);
-
-    if (mounted) {
-      setState(() => _isProcessing = false);
-    }
-  }
-
-  Future<void> _runMLKit() async {
     if (kIsWeb) {
-      _mlKitItems = [{'name': 'ML Kit không hỗ trợ trên Web', 'price': ''}];
+      setState(() {
+        _rawLines = ['Nội Dung Quét không hỗ trợ trên Web'];
+        _isProcessing = false;
+      });
       return;
     }
+
     try {
       final inputImage = InputImage.fromFile(_imageFile!);
       final recognizedText = await _textRecognizer.processImage(inputImage);
-      _mlKitItems = _parseTextWithRegex(recognizedText.text);
+      
+      _parseTextLogic(recognizedText.text);
+      
     } catch (e) {
-      _mlKitItems = [{'name': 'Lỗi ML Kit: $e', 'price': ''}];
+      setState(() {
+        _rawLines = ['Lỗi đọc ảnh: $e'];
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
     }
   }
 
-  Future<void> _runGemini(Uint8List imageBytes) async {
-    if (_geminiApiKey.isEmpty) {
-      _geminiItems = [{'name': 'Vui lòng bấm nút 🔑 góc phải trên để nhập API Key', 'price': ''}];
+  void _parseTextLogic(String rawText) {
+    if (rawText.trim().isEmpty) {
+      _rawLines = ['Không tìm thấy chữ nào trong ảnh'];
       return;
     }
-    
-    try {
-      final model = GenerativeModel(
-        model: 'gemini-1.5-flash',
-        apiKey: _geminiApiKey,
-      );
-      final prompt = TextPart('''
-        Hãy phân tích hóa đơn trong ảnh.
-        Trả về kết quả dưới định dạng JSON là một mảng các đối tượng chứa "name" (tên món hàng) và "price" (giá tiền).
-        Chỉ trả về chuỗi JSON, không giải thích gì thêm, không bọc bằng markdown ```json.
-        Nếu không thấy món nào, trả về mảng rỗng [].
-      ''');
-      final imagePart = DataPart('image/jpeg', imageBytes);
-      
-      final response = await model.generateContent([Content.multi([prompt, imagePart])]);
 
-      final String responseText = response.text?.trim() ?? '[]';
-      final cleanJson = responseText.replaceAll('```json', '').replaceAll('```', '').trim();
-      
-      final List<dynamic> jsonList = jsonDecode(cleanJson);
-      _geminiItems = jsonList.map((e) => {
-        'name': e['name'].toString(),
-        'price': e['price'].toString()
-      }).toList();
+    final lines = rawText.split('\n');
+    final priceRegex = RegExp(r'\b\d{1,3}(?:[.,]\d{3})+\b|\b\d{4,}\b');
+    final storeKeywords = [
+      'store', 'coffee', 'highland', 'circle k', 'shopee', 
+      'mart', 'supermarket', 'coop', 'bách hóa', 'vinmart', 'winmart', 'ministop', 'familymart'
+    ];
 
-      if (_geminiItems.isEmpty) {
-        _geminiItems = [{'name': 'Gemini không tìm thấy món nào', 'price': ''}];
-      }
-
-    } catch (e) {
-      _geminiItems = [{'name': 'Lỗi Gemini API (Có thể sai API Key): $e', 'price': ''}];
-    }
-  }
-
-  List<Map<String, String>> _parseTextWithRegex(String rawText) {
-    if (rawText.trim().isEmpty) return [];
-    final lines = rawText.split('\n').where((e) => e.trim().isNotEmpty).toList();
-    final List<Map<String, String>> items = [];
-    final priceRegex = RegExp(r'\b\d{1,3}(?:[.,]\d{3})+(?:\s?[đĐdD])?\b|\b\d{4,}(?:\s?[đĐdD])?\b');
+    int maxPrice = 0;
+    String? foundStore;
+    List<String> validLines = [];
 
     for (var line in lines) {
-      final match = priceRegex.firstMatch(line);
-      if (match != null) {
-        String price = match.group(0) ?? '';
-        String name = line.replaceAll(price, '').replaceAll(RegExp(r'^[-+*.,]+|[-+*.,]+$'), '').trim();
-        if (name.isEmpty) name = 'Mục không tên';
-        items.add({'name': name, 'price': price});
-      } else {
-        items.add({'name': line.trim(), 'price': ''});
+      final text = line.trim();
+      if (text.isEmpty) continue;
+      validLines.add(text);
+      
+      // Tìm tên cửa hàng
+      final lowerLine = text.toLowerCase();
+      if (foundStore == null) {
+        for (var kw in storeKeywords) {
+          if (lowerLine.contains(kw)) {
+            foundStore = text;
+            break;
+          }
+        }
+      }
+
+      // Tìm giá tiền lớn nhất
+      final matches = priceRegex.allMatches(text);
+      for (var match in matches) {
+        final priceStr = match.group(0)!;
+        // Chuẩn hóa số (xóa chấm, phẩy) để so sánh
+        final cleanStr = priceStr.replaceAll('.', '').replaceAll(',', '');
+        final price = int.tryParse(cleanStr);
+        if (price != null && price > maxPrice) {
+          maxPrice = price;
+        }
       }
     }
-    return items;
-  }
 
-  Future<void> _showApiKeyDialog() async {
-    final controller = TextEditingController(text: _geminiApiKey);
-    final isLight = ref.read(lightModeProvider);
-    final bgColor = isLight ? Colors.white : const Color(0xFF1E1F25);
-    final textColor = isLight ? Colors.black : Colors.white;
-
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: bgColor,
-        title: Text('Cấu hình Gemini API', style: TextStyle(color: textColor)),
-        content: TextField(
-          controller: controller,
-          style: TextStyle(color: textColor),
-          decoration: InputDecoration(
-            hintText: 'Dán API Key của bạn vào đây...',
-            hintStyle: const TextStyle(color: Colors.grey),
-            filled: true,
-            fillColor: isLight ? Colors.black.withOpacity(0.05) : Colors.black26,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() => _geminiApiKey = controller.text.trim());
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E676)),
-            child: const Text('Lưu Key', style: TextStyle(color: Colors.black)),
-          ),
-        ],
-      ),
+    // Format lại giá tiền lớn nhất (thêm dấu chấm phân cách hàng nghìn)
+    String formattedPrice = maxPrice.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]}.'
     );
+
+    setState(() {
+      _rawLines = validLines;
+      _storeName = foundStore ?? 'Không xác định';
+      _totalPrice = maxPrice > 0 ? '$formattedPrice đ' : '0 đ';
+    });
   }
 
   @override
@@ -194,35 +150,28 @@ class _OcrScannerScreenState extends ConsumerState<OcrScannerScreen> {
     final textColor = isLight ? Colors.black : Colors.white;
     final appBarColor = isLight ? Colors.white : const Color(0xFF12141C);
 
-    return DefaultTabController(
-      length: 2, // Chỉ còn Gemini và ML Kit
-      child: Scaffold(
-        backgroundColor: bgColor,
-        appBar: AppBar(
-          title: Text('Đọ Sức AI', style: TextStyle(fontSize: 20 * textScale, color: textColor)),
-          backgroundColor: appBarColor,
-          foregroundColor: textColor,
-          elevation: 0,
-          actions: [
-            IconButton(
-              icon: Icon(LucideIcons.key, color: textColor),
-              onPressed: _showApiKeyDialog,
-              tooltip: 'Nhập API Key',
-            ),
-            IconButton(
-              icon: Icon(LucideIcons.imagePlus, color: textColor),
-              onPressed: () => _pickImage(ImageSource.gallery),
-            )
-          ],
-        ),
-        body: SlidingUpPanel(
-          minHeight: 180,
-          maxHeight: MediaQuery.of(context).size.height * 0.8,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          color: panelColor,
-          panel: _buildPanel(isLight, textScale, textColor),
-          body: _buildBody(textColor, textScale),
-        ),
+    return Scaffold(
+      backgroundColor: bgColor,
+      appBar: AppBar(
+        leading: BackButton(color: textColor), // Đảm bảo luôn có nút Trở về
+        title: Text('Scan', style: TextStyle(fontSize: 20 * textScale, color: textColor, fontWeight: FontWeight.bold)),
+        backgroundColor: appBarColor,
+        foregroundColor: textColor,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(LucideIcons.imagePlus, color: textColor),
+            onPressed: () => _pickImage(ImageSource.gallery),
+          )
+        ],
+      ),
+      body: SlidingUpPanel(
+        minHeight: 280,
+        maxHeight: MediaQuery.of(context).size.height * 0.8,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        color: panelColor,
+        panel: _buildPanel(isLight, textScale, textColor),
+        body: _buildBody(textColor, textScale),
       ),
     );
   }
@@ -239,7 +188,7 @@ class _OcrScannerScreenState extends ConsumerState<OcrScannerScreen> {
                 : Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(LucideIcons.bot, size: 80, color: Color(0xFF8E8E93)),
+                      const Icon(LucideIcons.scanLine, size: 80, color: Color(0xFF8E8E93)),
                       const SizedBox(height: 16),
                       ElevatedButton.icon(
                         onPressed: () => _pickImage(ImageSource.camera),
@@ -278,31 +227,82 @@ class _OcrScannerScreenState extends ConsumerState<OcrScannerScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 12),
-        TabBar(
-          labelColor: const Color(0xFF00E676),
-          unselectedLabelColor: Colors.grey,
-          indicatorColor: const Color(0xFF00E676),
-          labelStyle: TextStyle(fontSize: 14 * textScale),
-          tabs: const [
-            Tab(text: "Gemini 1.5"),
-            Tab(text: "ML Kit"),
-          ],
+        const SizedBox(height: 16),
+        
+        // --- KẾT QUẢ PHÂN TÍCH CHÍNH ---
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildResultBox('Cửa hàng', _storeName, LucideIcons.store, isLight, textScale, textColor),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildResultBox('Tổng tiền', _totalPrice, LucideIcons.banknote, isLight, textScale, textColor, isHighlight: true),
+              ),
+            ],
+          ),
         ),
+        
+        const SizedBox(height: 24),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          child: Text(
+            'Nội Dung Quét',
+            style: TextStyle(
+              color: const Color(0xFF00E676),
+              fontSize: 16 * textScale,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        // --- NỘI DUNG RAW ---
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: _isProcessing 
               ? _buildSkeletonizerLoading(isLight, textColor) 
-              : TabBarView(
-                  children: [
-                    _buildResultList(_geminiItems, 'Gemini JSON API', isLight, textColor, textScale),
-                    _buildResultList(_mlKitItems, 'Google ML Kit', isLight, textColor, textScale),
-                  ],
-                ),
+              : _buildRawTextList(isLight, textColor, textScale),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildResultBox(String label, String value, IconData icon, bool isLight, double textScale, Color textColor, {bool isHighlight = false}) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isHighlight ? const Color(0xFF00E676).withOpacity(0.1) : (isLight ? Colors.black.withOpacity(0.05) : Colors.white.withOpacity(0.05)),
+        borderRadius: BorderRadius.circular(16),
+        border: isHighlight ? Border.all(color: const Color(0xFF00E676).withOpacity(0.3)) : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 14, color: isHighlight ? const Color(0xFF00E676) : Colors.grey),
+              const SizedBox(width: 6),
+              Text(label, style: TextStyle(color: Colors.grey, fontSize: 12 * textScale)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value, 
+            style: TextStyle(
+              color: isHighlight ? const Color(0xFF00E676) : textColor, 
+              fontSize: 15 * textScale, 
+              fontWeight: FontWeight.bold
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
     );
   }
 
@@ -313,15 +313,14 @@ class _OcrScannerScreenState extends ConsumerState<OcrScannerScreen> {
         itemCount: 4,
         itemBuilder: (context, index) {
           return Container(
-            margin: const EdgeInsets.only(bottom: 12),
+            margin: const EdgeInsets.only(bottom: 8),
             decoration: BoxDecoration(
               color: isLight ? Colors.black.withOpacity(0.05) : Colors.white.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: ListTile(
-              leading: Icon(LucideIcons.bot, color: textColor),
-              title: Text('Đang phân tích...', style: TextStyle(color: textColor)),
-              trailing: Text('00.000', style: TextStyle(color: textColor)),
+              leading: Icon(LucideIcons.fileText, color: textColor),
+              title: Text('Đang trích xuất dữ liệu...', style: TextStyle(color: textColor)),
             ),
           );
         },
@@ -329,32 +328,26 @@ class _OcrScannerScreenState extends ConsumerState<OcrScannerScreen> {
     );
   }
 
-  Widget _buildResultList(List<Map<String, String>> items, String engineName, bool isLight, Color textColor, double textScale) {
-    if (items.isEmpty) {
+  Widget _buildRawTextList(bool isLight, Color textColor, double textScale) {
+    if (_rawLines.isEmpty) {
       return Center(
-        child: Text('Chưa có dữ liệu từ $engineName', style: TextStyle(color: Colors.grey, fontSize: 16 * textScale)),
+        child: Text('Chưa có Nội Dung Quét', style: TextStyle(color: Colors.grey, fontSize: 14 * textScale)),
       );
     }
     
     return ListView.builder(
-      itemCount: items.length,
+      itemCount: _rawLines.length,
       itemBuilder: (context, index) {
         return Container(
-          margin: const EdgeInsets.only(bottom: 12),
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: isLight ? Colors.black.withOpacity(0.03) : Colors.white.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(16),
+            color: isLight ? Colors.black.withOpacity(0.03) : Colors.white.withOpacity(0.03),
+            borderRadius: BorderRadius.circular(12),
           ),
-          child: ListTile(
-            leading: const Icon(LucideIcons.checkCircle2, color: Color(0xFF00E676)),
-            title: Text(
-              items[index]['name'] ?? '',
-              style: TextStyle(color: textColor, fontSize: 16 * textScale),
-            ),
-            trailing: Text(
-              items[index]['price'] ?? '',
-              style: TextStyle(fontWeight: FontWeight.bold, color: textColor, fontSize: 16 * textScale),
-            ),
+          child: Text(
+            _rawLines[index],
+            style: TextStyle(color: textColor, fontSize: 14 * textScale),
           ),
         );
       },
