@@ -29,8 +29,8 @@ class _OcrScannerScreenState extends State<OcrScannerScreen> {
   final ImagePicker _picker = ImagePicker();
   final TextRecognizer _textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
   
-  // API Key Gemini (Tách chuỗi để đánh lừa GitHub Scanner không khóa code)
-  String _geminiApiKey = 'AQ.Ab8RN6JXXJ9H' + 't1u7mYkKxXqfTVp4V6Zi224Olq5Mz0pjckbxKA.';
+  // API Key Gemini (Bảo mật: Lấy từ môi trường lúc Compile, không lưu trong Source Code)
+  String _geminiApiKey = const String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
 
   @override
   void dispose() {
