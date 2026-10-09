@@ -15,12 +15,15 @@
 
 Bạn có thể trải nghiệm ngay giao diện Dashboard siêu mượt (Dark Mode, Glassmorphism, Material 3) trực tiếp trên trình duyệt Web:
 
-🌍 **[Live Demo (Netlify) - Khuyên Dùng](https://trcongthanh-expense-manager-ocr.netlify.app/)**  
-🌐 **[Live Demo (GitHub Pages)](https://trCongThanh.github.io/expense_manager_ocr/)**
+📱 **[Tải file cài đặt APK (Android) - Khuyên Dùng](https://github.com/trCongThanh/expense_manager_ocr/releases/latest)**
 
 *(Lưu ý: Do hạn chế của trình duyệt, tính năng **Quét Camera OCR** không hoạt động trên nền Web. Vui lòng cài đặt file APK bên dưới để trải nghiệm toàn bộ tính năng)*
 
-📱 **[Tải file cài đặt APK (Android)](https://github.com/trCongThanh/expense_manager_ocr/releases/latest)**
+🌍 **[Live Demo (Netlify)](https://trcongthanh-expense-manager-ocr.netlify.app/)**  
+🌐 **[Live Demo (GitHub Pages)](https://trCongThanh.github.io/expense_manager_ocr/)**
+
+
+
 
 ---
 
