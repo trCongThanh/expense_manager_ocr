@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
-import 'package:flutter_tesseract_ocr/flutter_tesseract_ocr.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
@@ -89,22 +88,15 @@ class _OcrScannerScreenState extends State<OcrScannerScreen> {
     }
   }
 
-  // 2. CHẠY TESSERACT OCR (Cần data file, có thể lỗi nếu thiếu file)
+  // 2. CHẠY TESSERACT OCR (Đã bị vô hiệu hóa vì lỗi tương thích)
   Future<void> _runTesseract() async {
-    if (kIsWeb) {
-      _tesseractItems = [{'name': 'Tesseract không hỗ trợ Web ổn định', 'price': ''}];
-      return;
-    }
-    try {
-      // Mặc định tesseract sẽ cố gắng dùng tiếng anh (eng) nếu ko truyền args
-      final text = await FlutterTesseractOcr.extractText(_imageFile!.path, language: 'eng');
-      _tesseractItems = _parseTextWithRegex(text);
-      if (_tesseractItems.isEmpty) {
-         _tesseractItems = [{'name': 'Tesseract không đọc được gì', 'price': ''}];
-      }
-    } catch (e) {
-      _tesseractItems = [{'name': 'Lỗi Tesseract (Thiếu file traineddata): $e', 'price': ''}];
-    }
+    // Tesseract cũ kỹ dùng jcenter() và bị lỗi tương thích với Gradle 8.0+
+    await Future.delayed(const Duration(milliseconds: 500));
+    _tesseractItems = [
+      {'name': 'Tesseract OCR đã bị vô hiệu hóa', 'price': ''},
+      {'name': 'Lý do: Thư viện quá cũ, gây lỗi Build Android (Gradle 8+).', 'price': ''},
+      {'name': 'Khuyên dùng: ML Kit hoặc Gemini thay thế.', 'price': ''},
+    ];
   }
 
   // 3. CHẠY GOOGLE GEMINI 1.5 (Đám mây, hỗ trợ mọi nền tảng)
