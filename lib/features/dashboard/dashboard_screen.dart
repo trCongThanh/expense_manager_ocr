@@ -40,6 +40,32 @@ class DashboardScreen extends ConsumerWidget {
   Widget _buildHeader(WidgetRef ref, bool isPrivacyMode, bool isLight, double textScale) {
     final textColor = isLight ? Colors.black : Colors.white;
     final secondaryTextColor = isLight ? Colors.black54 : const Color(0xFF8E8E93);
+    
+    // Tính toán số dư
+    final transactions = ref.watch(transactionsProvider);
+    int totalIncome = 0;
+    int totalExpense = 0;
+    
+    for (var tx in transactions) {
+      final amountStr = tx['amount'].toString();
+      final cleanStr = amountStr.replaceAll(RegExp(r'[^0-9]'), '');
+      final amount = int.tryParse(cleanStr) ?? 0;
+      
+      if (amountStr.startsWith('+')) {
+        totalIncome += amount;
+      } else if (amountStr.startsWith('-')) {
+        totalExpense += amount;
+      }
+    }
+    
+    final totalBalance = totalIncome - totalExpense;
+
+    String formatCurrency(int amount) {
+      return amount.toString().replaceAllMapped(
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+        (Match m) => '${m[1]}.'
+      );
+    }
 
     return SliverToBoxAdapter(
       child: Padding(
@@ -59,7 +85,7 @@ class DashboardScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     _buildObscurableText(
-                      '18.500.000 đ',
+                      '${formatCurrency(totalBalance)} đ',
                       isObscured: isPrivacyMode,
                       style: TextStyle(color: textColor, fontSize: 36 * textScale, fontWeight: FontWeight.bold, letterSpacing: -1),
                     ),
@@ -84,7 +110,7 @@ class DashboardScreen extends ConsumerWidget {
                 Expanded(
                   child: _buildSummaryCard(
                     title: 'Thu nhập',
-                    amount: '+25.000.000 đ',
+                    amount: '+${formatCurrency(totalIncome)} đ',
                     icon: LucideIcons.arrowDownLeft,
                     color: const Color(0xFF00E676),
                     isObscured: isPrivacyMode,
@@ -96,7 +122,7 @@ class DashboardScreen extends ConsumerWidget {
                 Expanded(
                   child: _buildSummaryCard(
                     title: 'Chi tiêu',
-                    amount: '-6.500.000 đ',
+                    amount: '-${formatCurrency(totalExpense)} đ',
                     icon: LucideIcons.arrowUpRight,
                     color: const Color(0xFFFF5252),
                     isObscured: isPrivacyMode,

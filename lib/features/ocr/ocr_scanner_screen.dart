@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:hive/hive.dart';
 import '../dashboard/main_screen.dart'; // Lấy provider theme
 
 class OcrScannerScreen extends ConsumerStatefulWidget {
@@ -279,16 +280,29 @@ class _OcrScannerScreenState extends ConsumerState<OcrScannerScreen> {
               child: ElevatedButton.icon(
                 onPressed: () {
                   // Thêm vào danh sách Giao dịch
-                  ref.read(transactionsProvider.notifier).update((state) => [
-                    {
-                      'title': _storeName,
-                      'category': 'Khác', // Mặc định
-                      'date': 'Vừa xong',
-                      'amount': '-$_totalPrice',
-                      'icon': LucideIcons.receipt,
-                    },
-                    ...state,
-                  ]);
+                  ref.read(transactionsProvider.notifier).update((state) {
+                    final newState = [
+                      {
+                        'title': _storeName,
+                        'category': 'Khác', 
+                        'date': 'Vừa xong',
+                        'amount': '-$_totalPrice',
+                        'iconName': 'receipt',
+                        'icon': LucideIcons.receipt,
+                      },
+                      ...state,
+                    ];
+                    // Lưu xuống ổ cứng
+                    Hive.box('app_data').put('transactions', newState.map((e) => {
+                      'title': e['title'],
+                      'category': e['category'],
+                      'date': e['date'],
+                      'amount': e['amount'],
+                      'iconName': e['iconName'],
+                    }).toList());
+                    
+                    return newState;
+                  });
                   
                   // Hiển thị thông báo
                   ScaffoldMessenger.of(context).showSnackBar(

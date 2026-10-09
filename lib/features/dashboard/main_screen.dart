@@ -7,17 +7,57 @@ import 'package:fl_chart/fl_chart.dart';
 import '../ocr/ocr_scanner_screen.dart';
 import 'dashboard_screen.dart';
 
-// Provider quản lý chế độ (Demo)
-final lightModeProvider = StateProvider<bool>((ref) => false);
-final textSizeProvider = StateProvider<double>((ref) => 1.0);
+import 'package:hive/hive.dart';
 
-// Provider quản lý danh sách giao dịch
-final transactionsProvider = StateProvider<List<Map<String, dynamic>>>((ref) => [
-  {'title': 'Highlands Coffee', 'category': 'Ăn uống', 'date': 'Hôm nay', 'amount': '-65.000 đ', 'icon': LucideIcons.coffee},
-  {'title': 'GrabBike', 'category': 'Di chuyển', 'date': 'Hôm nay', 'amount': '-42.000 đ', 'icon': LucideIcons.car},
-  {'title': 'Tiền lương', 'category': 'Thu nhập', 'date': 'Hôm qua', 'amount': '+25.000.000 đ', 'icon': LucideIcons.wallet},
-  {'title': 'Shopee Supermarket', 'category': 'Mua sắm', 'date': '2 ngày trước', 'amount': '-1.250.000 đ', 'icon': LucideIcons.shoppingBag},
-]);
+// Provider quản lý chế độ Sáng/Tối (Lưu bằng Hive)
+final lightModeProvider = StateProvider<bool>((ref) {
+  final box = Hive.box('app_data');
+  return box.get('isLightMode', defaultValue: false);
+});
+
+// Provider quản lý Cỡ chữ (Lưu bằng Hive)
+final textSizeProvider = StateProvider<double>((ref) {
+  final box = Hive.box('app_data');
+  return box.get('textSize', defaultValue: 1.0);
+});
+
+// Provider quản lý danh sách giao dịch (Lưu bằng Hive)
+final transactionsProvider = StateProvider<List<Map<String, dynamic>>>((ref) {
+  final box = Hive.box('app_data');
+  final storedData = box.get('transactions');
+  if (storedData != null) {
+    try {
+      final List<dynamic> list = storedData;
+      return list.map((e) {
+        // Fix: Chuyển đổi icon name thành IconData khi lấy từ Hive
+        IconData icon = LucideIcons.receipt;
+        if (e['iconName'] == 'coffee') icon = LucideIcons.coffee;
+        else if (e['iconName'] == 'car') icon = LucideIcons.car;
+        else if (e['iconName'] == 'wallet') icon = LucideIcons.wallet;
+        else if (e['iconName'] == 'shoppingBag') icon = LucideIcons.shoppingBag;
+        
+        return {
+          'title': e['title'],
+          'category': e['category'],
+          'date': e['date'],
+          'amount': e['amount'],
+          'iconName': e['iconName'],
+          'icon': icon,
+        };
+      }).toList();
+    } catch (e) {
+      debugPrint("Lỗi đọc Hive: $e");
+    }
+  }
+  
+  // Dữ liệu mẫu ban đầu nếu chưa có gì
+  return [
+    {'title': 'Highlands Coffee', 'category': 'Ăn uống', 'date': 'Hôm nay', 'amount': '-65.000 đ', 'iconName': 'coffee', 'icon': LucideIcons.coffee},
+    {'title': 'GrabBike', 'category': 'Di chuyển', 'date': 'Hôm nay', 'amount': '-42.000 đ', 'iconName': 'car', 'icon': LucideIcons.car},
+    {'title': 'Tiền lương', 'category': 'Thu nhập', 'date': 'Hôm qua', 'amount': '+25.000.000 đ', 'iconName': 'wallet', 'icon': LucideIcons.wallet},
+    {'title': 'Shopee', 'category': 'Mua sắm', 'date': '2 ngày trước', 'amount': '-1.250.000 đ', 'iconName': 'shoppingBag', 'icon': LucideIcons.shoppingBag},
+  ];
+});
 
 class AnalyticsScreen extends ConsumerWidget {
   const AnalyticsScreen({super.key});
@@ -161,7 +201,10 @@ class SettingsScreen extends ConsumerWidget {
                     title: Text('Chế độ Sáng (Light Mode)', style: TextStyle(color: textColor, fontSize: 16 * textScale)),
                     secondary: Icon(LucideIcons.sun, color: textColor),
                     value: isLight,
-                    onChanged: (val) => ref.read(lightModeProvider.notifier).state = val,
+                    onChanged: (val) {
+                      ref.read(lightModeProvider.notifier).state = val;
+                      Hive.box('app_data').put('isLightMode', val);
+                    },
                     activeColor: const Color(0xFF00E676),
                   ),
                   Divider(color: dividerColor),
@@ -172,7 +215,10 @@ class SettingsScreen extends ConsumerWidget {
                       min: 0.8,
                       max: 1.5,
                       activeColor: const Color(0xFF00E676),
-                      onChanged: (val) => ref.read(textSizeProvider.notifier).state = val,
+                      onChanged: (val) {
+                        ref.read(textSizeProvider.notifier).state = val;
+                        Hive.box('app_data').put('textSize', val);
+                      },
                     ),
                     leading: Icon(LucideIcons.aArrowUp, color: textColor),
                   ),

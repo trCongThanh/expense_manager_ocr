@@ -9,11 +9,8 @@ void main() async {
   // Khởi tạo Hive
   await Hive.initFlutter();
   
-  // Register adapters here
-  // Hive.registerAdapter(ExpenseAdapter());
-  
-  // Open boxes
-  // await Hive.openBox('expenses');
+  // Mở box lưu trữ dữ liệu
+  await Hive.openBox('app_data');
 
   runApp(
     const ProviderScope(
