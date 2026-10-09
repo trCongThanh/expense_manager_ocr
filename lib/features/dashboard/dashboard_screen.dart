@@ -20,20 +20,15 @@ class DashboardScreen extends ConsumerWidget {
       backgroundColor: const Color(0xFF12141C),
       body: SafeArea(
         bottom: false,
-        child: Stack(
-          children: [
-            CustomScrollView(
-              physics: const BouncingScrollPhysics(),
-              slivers: [
-                _buildHeader(ref, isPrivacyMode),
-                _buildChartSection(),
-                _buildRecentTransactions(isPrivacyMode),
-                const SliverToBoxAdapter(
-                  child: SizedBox(height: 120),
-                ),
-              ],
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            _buildHeader(ref, isPrivacyMode),
+            _buildChartSection(),
+            _buildRecentTransactions(isPrivacyMode),
+            const SliverToBoxAdapter(
+              child: SizedBox(height: 120),
             ),
-            _buildGlassBottomNav(context),
           ],
         ),
       ),
