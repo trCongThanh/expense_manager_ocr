@@ -1,5 +1,10 @@
 # Quản Lý Chi Tiêu OCR Hóa Đơn
 
+🚀 **[Trải nghiệm bản Web trực tiếp tại đây (Live Demo)](https://trCongThanh.github.io/expense_manager_ocr/)**
+*(Lưu ý: Tính năng Camera OCR chỉ hoạt động trên thiết bị di động thật)*
+
+📦 **[Tải file APK Android (Bản cài đặt)](https://github.com/trCongThanh/expense_manager_ocr/releases/latest)**
+
 Dự án Flutter quản lý chi tiêu kết hợp công nghệ OCR (nhận diện ký tự quang học) để trích xuất thông tin tự động từ hình ảnh hóa đơn.
 
 ## Các Thư Viện Đã Tích Hợp
