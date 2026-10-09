@@ -70,26 +70,43 @@ class _OcrScannerScreenState extends State<OcrScannerScreen> {
     }
   }
 
-  // Hàm giả lập phân tích Text thô thành Danh sách món hàng (Dùng Regex hoặc phân tích dòng)
+  // Hàm phân tích Text thô thành Danh sách món hàng
   void _parseTextToItems(String rawText) {
-    // Trong thực tế, bạn sẽ dùng Regex phức tạp để bóc tách Tên món và Giá tiền.
-    // Dưới đây là logic tách dòng đơn giản để demo:
-    final lines = rawText.split('\n');
-    final List<Map<String, String>> items = [];
-    
-    for (var line in lines) {
-      // Giả sử dòng nào có chứa số thì có thể là giá tiền (Rất thô sơ)
-      if (line.contains(RegExp(r'\d')) && line.length > 5) {
-        items.add({
-          'name': line, 
-          'price': '---' // Cần regex mạnh hơn để tách giá
-        });
-      }
+    if (rawText.trim().isEmpty) {
+      setState(() {
+        _parsedItems = [{'name': 'Không nhận diện được chữ nào từ ảnh này', 'price': ''}];
+      });
+      return;
     }
 
-    // Nếu không tách được gì, cho hiển thị text thô
-    if (items.isEmpty && rawText.isNotEmpty) {
-      items.add({'name': 'Không tìm thấy món cụ thể', 'price': ''});
+    final lines = rawText.split('\n').where((e) => e.trim().isNotEmpty).toList();
+    final List<Map<String, String>> items = [];
+    
+    // Regex tìm giá tiền (ví dụ: 10.000, 25,000, 10000, 25.000đ)
+    final priceRegex = RegExp(r'\b\d{1,3}(?:[.,]\d{3})+(?:\s?[đĐdD])?\b|\b\d{4,}(?:\s?[đĐdD])?\b');
+
+    for (var line in lines) {
+      final match = priceRegex.firstMatch(line);
+      if (match != null) {
+        // Tách giá tiền ra khỏi tên món
+        String price = match.group(0) ?? '';
+        String name = line.replaceAll(price, '').trim();
+        
+        // Dọn dẹp ký tự thừa
+        name = name.replaceAll(RegExp(r'^[-+*.,]+|[-+*.,]+$'), '').trim();
+        if (name.isEmpty) name = 'Mục không tên';
+        
+        items.add({
+          'name': name, 
+          'price': price
+        });
+      } else {
+        // Nếu dòng không chứa giá tiền, vẫn in ra để người dùng biết OCR đã quét được những gì
+        items.add({
+          'name': line.trim(),
+          'price': ''
+        });
+      }
     }
 
     setState(() {
