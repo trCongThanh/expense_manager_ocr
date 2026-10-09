@@ -11,6 +11,14 @@ import 'dashboard_screen.dart';
 final lightModeProvider = StateProvider<bool>((ref) => false);
 final textSizeProvider = StateProvider<double>((ref) => 1.0);
 
+// Provider quản lý danh sách giao dịch
+final transactionsProvider = StateProvider<List<Map<String, dynamic>>>((ref) => [
+  {'title': 'Highlands Coffee', 'category': 'Ăn uống', 'date': 'Hôm nay', 'amount': '-65.000 đ', 'icon': LucideIcons.coffee},
+  {'title': 'GrabBike', 'category': 'Di chuyển', 'date': 'Hôm nay', 'amount': '-42.000 đ', 'icon': LucideIcons.car},
+  {'title': 'Tiền lương', 'category': 'Thu nhập', 'date': 'Hôm qua', 'amount': '+25.000.000 đ', 'icon': LucideIcons.wallet},
+  {'title': 'Shopee Supermarket', 'category': 'Mua sắm', 'date': '2 ngày trước', 'amount': '-1.250.000 đ', 'icon': LucideIcons.shoppingBag},
+]);
+
 class AnalyticsScreen extends ConsumerWidget {
   const AnalyticsScreen({super.key});
   @override

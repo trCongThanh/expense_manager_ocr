@@ -27,7 +27,7 @@ class DashboardScreen extends ConsumerWidget {
           slivers: [
             _buildHeader(ref, isPrivacyMode, isLight, textScale),
             _buildChartSection(isLight),
-            _buildRecentTransactions(isPrivacyMode, isLight, textScale),
+            _buildRecentTransactions(ref, isPrivacyMode, isLight, textScale),
             const SliverToBoxAdapter(
               child: SizedBox(height: 120),
             ),
@@ -208,18 +208,13 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildRecentTransactions(bool isPrivacyMode, bool isLight, double textScale) {
+  Widget _buildRecentTransactions(WidgetRef ref, bool isPrivacyMode, bool isLight, double textScale) {
     final textColor = isLight ? Colors.black : Colors.white;
     final secondaryTextColor = isLight ? Colors.black54 : const Color(0xFF8E8E93);
     final itemBgColor = isLight ? Colors.black.withOpacity(0.03) : Colors.white.withOpacity(0.03);
     final iconBgColor = isLight ? Colors.black.withOpacity(0.05) : Colors.white.withOpacity(0.05);
 
-    final transactions = [
-      {'title': 'Highlands Coffee', 'category': 'Ăn uống', 'date': 'Hôm nay', 'amount': '-65.000 đ', 'icon': LucideIcons.coffee},
-      {'title': 'GrabBike', 'category': 'Di chuyển', 'date': 'Hôm nay', 'amount': '-42.000 đ', 'icon': LucideIcons.car},
-      {'title': 'Tiền lương', 'category': 'Thu nhập', 'date': 'Hôm qua', 'amount': '+25.000.000 đ', 'icon': LucideIcons.wallet},
-      {'title': 'Shopee Supermarket', 'category': 'Mua sắm', 'date': '2 ngày trước', 'amount': '-1.250.000 đ', 'icon': LucideIcons.shoppingBag},
-    ];
+    final transactions = ref.watch(transactionsProvider);
 
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 24),

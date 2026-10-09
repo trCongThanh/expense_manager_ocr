@@ -268,6 +268,52 @@ class _OcrScannerScreenState extends ConsumerState<OcrScannerScreen> {
               : _buildRawTextList(isLight, textColor, textScale),
           ),
         ),
+
+        // --- NÚT LƯU GIAO DỊCH ---
+        if (_totalPrice != '0 đ' && !_isProcessing)
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  // Thêm vào danh sách Giao dịch
+                  ref.read(transactionsProvider.notifier).update((state) => [
+                    {
+                      'title': _storeName,
+                      'category': 'Khác', // Mặc định
+                      'date': 'Vừa xong',
+                      'amount': '-$_totalPrice',
+                      'icon': LucideIcons.receipt,
+                    },
+                    ...state,
+                  ]);
+                  
+                  // Hiển thị thông báo
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Đã lưu giao dịch thành công!'),
+                      backgroundColor: Color(0xFF00E676),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+
+                  // Trở về Dashboard
+                  Navigator.pop(context);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00E676),
+                  foregroundColor: const Color(0xFF12141C),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                icon: const Icon(LucideIcons.save),
+                label: Text('Lưu Hóa Đơn', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16 * textScale)),
+              ),
+            ),
+          ),
       ],
     );
   }
