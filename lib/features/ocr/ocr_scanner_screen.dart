@@ -2,33 +2,34 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import '../dashboard/main_screen.dart'; // Lấy provider theme
 
-class OcrScannerScreen extends StatefulWidget {
+class OcrScannerScreen extends ConsumerStatefulWidget {
   const OcrScannerScreen({super.key});
 
   @override
-  State<OcrScannerScreen> createState() => _OcrScannerScreenState();
+  ConsumerState<OcrScannerScreen> createState() => _OcrScannerScreenState();
 }
 
-class _OcrScannerScreenState extends State<OcrScannerScreen> {
+class _OcrScannerScreenState extends ConsumerState<OcrScannerScreen> {
   bool _isProcessing = false;
   File? _imageFile;
   
-  // Kết quả của 3 AI
+  // Kết quả của 2 AI
   List<Map<String, String>> _mlKitItems = [];
-  List<Map<String, String>> _tesseractItems = [];
   List<Map<String, String>> _geminiItems = [];
 
   final ImagePicker _picker = ImagePicker();
   final TextRecognizer _textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
   
-  // API Key Gemini (Dùng mảng để chặn trình biên dịch tự động nối chuỗi, giúp vượt máy quét GitHub Pages)
+  // API Key Gemini (Dùng mảng để chặn trình biên dịch)
   String _geminiApiKey = ['AQ.Ab8RN6JXXJ9H', 't1u7mYkKxXqfTVp4V6Zi224Olq5Mz0pjckbxKA.'].join('');
 
   @override
@@ -45,7 +46,6 @@ class _OcrScannerScreenState extends State<OcrScannerScreen> {
           _imageFile = File(pickedFile.path);
           _isProcessing = true;
           _mlKitItems = [];
-          _tesseractItems = [];
           _geminiItems = [];
         });
         
@@ -61,10 +61,9 @@ class _OcrScannerScreenState extends State<OcrScannerScreen> {
     if (_imageFile == null) return;
     final imageBytes = await _imageFile!.readAsBytes();
 
-    // Chạy song song 3 AI cùng lúc để tiết kiệm thời gian
+    // Chạy song song 2 AI cùng lúc
     await Future.wait([
       _runMLKit(),
-      _runTesseract(),
       _runGemini(imageBytes),
     ]);
 
@@ -73,7 +72,6 @@ class _OcrScannerScreenState extends State<OcrScannerScreen> {
     }
   }
 
-  // 1. CHẠY GOOGLE ML KIT (Chỉ hỗ trợ Mobile)
   Future<void> _runMLKit() async {
     if (kIsWeb) {
       _mlKitItems = [{'name': 'ML Kit không hỗ trợ trên Web', 'price': ''}];
@@ -88,18 +86,6 @@ class _OcrScannerScreenState extends State<OcrScannerScreen> {
     }
   }
 
-  // 2. CHẠY TESSERACT OCR (Đã bị vô hiệu hóa vì lỗi tương thích)
-  Future<void> _runTesseract() async {
-    // Tesseract cũ kỹ dùng jcenter() và bị lỗi tương thích với Gradle 8.0+
-    await Future.delayed(const Duration(milliseconds: 500));
-    _tesseractItems = [
-      {'name': 'Tesseract OCR đã bị vô hiệu hóa', 'price': ''},
-      {'name': 'Lý do: Thư viện quá cũ, gây lỗi Build Android (Gradle 8+).', 'price': ''},
-      {'name': 'Khuyên dùng: ML Kit hoặc Gemini thay thế.', 'price': ''},
-    ];
-  }
-
-  // 3. CHẠY GOOGLE GEMINI 1.5 (Đám mây, hỗ trợ mọi nền tảng)
   Future<void> _runGemini(Uint8List imageBytes) async {
     if (_geminiApiKey.isEmpty) {
       _geminiItems = [{'name': 'Vui lòng bấm nút 🔑 góc phải trên để nhập API Key', 'price': ''}];
@@ -119,12 +105,9 @@ class _OcrScannerScreenState extends State<OcrScannerScreen> {
       ''');
       final imagePart = DataPart('image/jpeg', imageBytes);
       
-      final response = await model.generateContent([
-        Content.multi([prompt, imagePart])
-      ]);
+      final response = await model.generateContent([Content.multi([prompt, imagePart])]);
 
       final String responseText = response.text?.trim() ?? '[]';
-      // Lọc bỏ markdown json nếu AI cố tình trả về
       final cleanJson = responseText.replaceAll('```json', '').replaceAll('```', '').trim();
       
       final List<dynamic> jsonList = jsonDecode(cleanJson);
@@ -142,7 +125,6 @@ class _OcrScannerScreenState extends State<OcrScannerScreen> {
     }
   }
 
-  // Logic Regex thô sơ dùng chung cho ML Kit & Tesseract
   List<Map<String, String>> _parseTextWithRegex(String rawText) {
     if (rawText.trim().isEmpty) return [];
     final lines = rawText.split('\n').where((e) => e.trim().isNotEmpty).toList();
@@ -165,19 +147,23 @@ class _OcrScannerScreenState extends State<OcrScannerScreen> {
 
   Future<void> _showApiKeyDialog() async {
     final controller = TextEditingController(text: _geminiApiKey);
+    final isLight = ref.read(lightModeProvider);
+    final bgColor = isLight ? Colors.white : const Color(0xFF1E1F25);
+    final textColor = isLight ? Colors.black : Colors.white;
+
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1F25),
-        title: const Text('Cấu hình Gemini API', style: TextStyle(color: Colors.white)),
+        backgroundColor: bgColor,
+        title: Text('Cấu hình Gemini API', style: TextStyle(color: textColor)),
         content: TextField(
           controller: controller,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: textColor),
           decoration: InputDecoration(
             hintText: 'Dán API Key của bạn vào đây...',
             hintStyle: const TextStyle(color: Colors.grey),
             filled: true,
-            fillColor: Colors.black26,
+            fillColor: isLight ? Colors.black.withOpacity(0.05) : Colors.black26,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
@@ -201,23 +187,30 @@ class _OcrScannerScreenState extends State<OcrScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isLight = ref.watch(lightModeProvider);
+    final textScale = ref.watch(textSizeProvider);
+    final bgColor = isLight ? Colors.white : const Color(0xFF12141C);
+    final panelColor = isLight ? Colors.grey[100]! : const Color(0xFF1E1F25);
+    final textColor = isLight ? Colors.black : Colors.white;
+    final appBarColor = isLight ? Colors.white : const Color(0xFF12141C);
+
     return DefaultTabController(
-      length: 3,
+      length: 2, // Chỉ còn Gemini và ML Kit
       child: Scaffold(
-        backgroundColor: const Color(0xFF12141C),
+        backgroundColor: bgColor,
         appBar: AppBar(
-          title: const Text('Đọ Sức 3 Lõi AI'),
-          backgroundColor: const Color(0xFF12141C),
-          foregroundColor: Colors.white,
+          title: Text('Đọ Sức AI', style: TextStyle(fontSize: 20 * textScale, color: textColor)),
+          backgroundColor: appBarColor,
+          foregroundColor: textColor,
           elevation: 0,
           actions: [
             IconButton(
-              icon: const Icon(LucideIcons.key),
+              icon: Icon(LucideIcons.key, color: textColor),
               onPressed: _showApiKeyDialog,
               tooltip: 'Nhập API Key',
             ),
             IconButton(
-              icon: const Icon(LucideIcons.imagePlus),
+              icon: Icon(LucideIcons.imagePlus, color: textColor),
               onPressed: () => _pickImage(ImageSource.gallery),
             )
           ],
@@ -226,15 +219,15 @@ class _OcrScannerScreenState extends State<OcrScannerScreen> {
           minHeight: 180,
           maxHeight: MediaQuery.of(context).size.height * 0.8,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          color: const Color(0xFF1E1F25),
-          panel: _buildPanel(),
-          body: _buildBody(),
+          color: panelColor,
+          panel: _buildPanel(isLight, textScale, textColor),
+          body: _buildBody(textColor, textScale),
         ),
       ),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(Color textColor, double textScale) {
     return Column(
       children: [
         Expanded(
@@ -259,7 +252,7 @@ class _OcrScannerScreenState extends State<OcrScannerScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                         ),
                         icon: const Icon(LucideIcons.camera),
-                        label: const Text('Mở Camera', style: TextStyle(fontWeight: FontWeight.bold)),
+                        label: Text('Mở Camera', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14 * textScale)),
                       ),
                       const SizedBox(height: 160),
                     ],
@@ -270,7 +263,7 @@ class _OcrScannerScreenState extends State<OcrScannerScreen> {
     );
   }
 
-  Widget _buildPanel() {
+  Widget _buildPanel(bool isLight, double textScale, Color textColor) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -280,32 +273,31 @@ class _OcrScannerScreenState extends State<OcrScannerScreen> {
             width: 40,
             height: 5,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: isLight ? Colors.black.withOpacity(0.2) : Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(12),
             ),
           ),
         ),
         const SizedBox(height: 12),
-        const TabBar(
-          labelColor: Color(0xFF00E676),
+        TabBar(
+          labelColor: const Color(0xFF00E676),
           unselectedLabelColor: Colors.grey,
-          indicatorColor: Color(0xFF00E676),
-          tabs: [
+          indicatorColor: const Color(0xFF00E676),
+          labelStyle: TextStyle(fontSize: 14 * textScale),
+          tabs: const [
             Tab(text: "Gemini 1.5"),
             Tab(text: "ML Kit"),
-            Tab(text: "Tesseract"),
           ],
         ),
         Expanded(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: _isProcessing 
-              ? _buildSkeletonizerLoading() 
+              ? _buildSkeletonizerLoading(isLight, textColor) 
               : TabBarView(
                   children: [
-                    _buildResultList(_geminiItems, 'Gemini JSON API'),
-                    _buildResultList(_mlKitItems, 'Google ML Kit Local'),
-                    _buildResultList(_tesseractItems, 'Tesseract OCR'),
+                    _buildResultList(_geminiItems, 'Gemini JSON API', isLight, textColor, textScale),
+                    _buildResultList(_mlKitItems, 'Google ML Kit', isLight, textColor, textScale),
                   ],
                 ),
           ),
@@ -314,7 +306,7 @@ class _OcrScannerScreenState extends State<OcrScannerScreen> {
     );
   }
 
-  Widget _buildSkeletonizerLoading() {
+  Widget _buildSkeletonizerLoading(bool isLight, Color textColor) {
     return Skeletonizer(
       enabled: true,
       child: ListView.builder(
@@ -323,13 +315,13 @@ class _OcrScannerScreenState extends State<OcrScannerScreen> {
           return Container(
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: isLight ? Colors.black.withOpacity(0.05) : Colors.white.withOpacity(0.05),
               borderRadius: BorderRadius.circular(16),
             ),
             child: ListTile(
-              leading: const Icon(LucideIcons.bot, color: Colors.white),
-              title: const Text('Đang phân tích...', style: TextStyle(color: Colors.white)),
-              trailing: const Text('00.000', style: TextStyle(color: Colors.white)),
+              leading: Icon(LucideIcons.bot, color: textColor),
+              title: Text('Đang phân tích...', style: TextStyle(color: textColor)),
+              trailing: Text('00.000', style: TextStyle(color: textColor)),
             ),
           );
         },
@@ -337,10 +329,10 @@ class _OcrScannerScreenState extends State<OcrScannerScreen> {
     );
   }
 
-  Widget _buildResultList(List<Map<String, String>> items, String engineName) {
+  Widget _buildResultList(List<Map<String, String>> items, String engineName, bool isLight, Color textColor, double textScale) {
     if (items.isEmpty) {
       return Center(
-        child: Text('Chưa có dữ liệu từ $engineName', style: const TextStyle(color: Colors.grey)),
+        child: Text('Chưa có dữ liệu từ $engineName', style: TextStyle(color: Colors.grey, fontSize: 16 * textScale)),
       );
     }
     
@@ -350,18 +342,18 @@ class _OcrScannerScreenState extends State<OcrScannerScreen> {
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
+            color: isLight ? Colors.black.withOpacity(0.03) : Colors.white.withOpacity(0.05),
             borderRadius: BorderRadius.circular(16),
           ),
           child: ListTile(
             leading: const Icon(LucideIcons.checkCircle2, color: Color(0xFF00E676)),
             title: Text(
               items[index]['name'] ?? '',
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: textColor, fontSize: 16 * textScale),
             ),
             trailing: Text(
               items[index]['price'] ?? '',
-              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+              style: TextStyle(fontWeight: FontWeight.bold, color: textColor, fontSize: 16 * textScale),
             ),
           ),
         );
